@@ -234,13 +234,30 @@ def list_all_records(token: str, app_token: str, table_id: str) -> list:
 
 
 def parse_options_from_field(raw):
-    """Accept options as a list or newline-separated string."""
+    """Accept options as a list, newline-separated, pipe-separated,
+    or a single line with A/B/C/D prefixes."""
     if raw is None:
         return []
     if isinstance(raw, list):
         return [str(x).strip() for x in raw if str(x).strip()]
     if isinstance(raw, str):
-        return [line.strip() for line in raw.splitlines() if line.strip()]
+        text = raw.strip()
+        if not text:
+            return []
+        # 1) Newline-separated
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        if len(lines) > 1:
+            return lines
+        # 2) Pipe-separated
+        if "|" in text:
+            return [part.strip() for part in text.split("|") if part.strip()]
+        # 3) Single line with option prefixes like "A. xxx B. yyy C. zzz"
+        # Split before each "A. ", "B. ", "C. ", "D. " etc.
+        parts = re.split(r"(?=\b[A-Z]\.\s)", text)
+        parts = [p.strip() for p in parts if p.strip()]
+        if len(parts) > 1:
+            return parts
+        return lines
     return []
 
 
