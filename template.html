@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{PAGE_TITLE}}</title>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #fff;
+  --text: #1a1a2e;
+  --muted: #8892b0;
+  --accent: #4f6ef7;
+  --accent-light: #eef1ff;
+  --correct: #22c55e;
+  --correct-bg: #f0fdf4;
+  --wrong: #ef4444;
+  --wrong-bg: #fef2f2;
+  --missed: #f59e0b;
+  --missed-bg: #fffbeb;
+  --border: #e5e7eb;
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width: 860px; margin: 0 auto; padding: 16px; }
+
+/* Header */
+.header {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.header h1 { font-size: 1.25em; font-weight: 700; }
+.header .meta { font-size: .82em; color: var(--muted); margin-top: 4px; }
+
+/* Timer */
+.timer-bar {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  font-size: .85em; color: var(--muted);
+}
+.timer-bar .time { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 1.1em; }
+.timer-bar .time.warning { color: var(--missed); }
+.timer-bar .time.danger { color: var(--wrong); animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.4; } }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.tab {
+  padding: 6px 16px; border-radius: 20px; cursor: pointer;
+  font-size: .85em; font-weight: 500; border: 1px solid var(--border);
+  background: var(--card-bg); color: var(--muted); transition: all .15s;
+}
+.tab:hover { border-color: var(--accent); color: var(--text); }
+.tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Progress */
+.progress-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 12px; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+
+/* Question card */
+.q-card {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 24px; margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.q-num { font-size: .85em; font-weight: 700; color: var(--accent); }
+.q-badge {
+  font-size: .75em; padding: 2px 10px; border-radius: 12px;
+  background: var(--accent-light); color: var(--accent); font-weight: 600;
+}
+.q-stem { font-size: 1.05em; margin-bottom: 18px; font-weight: 500; line-height: 1.7; }
+
+/* Options */
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option {
+  display: flex; align-items: flex-start; padding: 11px 14px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  cursor: pointer; transition: all .15s; font-size: .95em;
+}
+.option:hover { border-color: var(--accent); background: var(--accent-light); }
+.option input[type="radio"], .option input[type="checkbox"] {
+  margin-right: 10px; margin-top: 3px; accent-color: var(--accent); flex-shrink: 0;
+}
+.option.correct { border-color: var(--correct); background: var(--correct-bg); }
+.option.wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+.option.missed { border-color: var(--missed); background: var(--missed-bg); }
+
+/* TF buttons */
+.tf-row { display: flex; gap: 12px; }
+.tf-btn {
+  flex: 1; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px;
+  text-align: center; cursor: pointer; font-size: 1em; font-weight: 600;
+  background: #fff; transition: all .15s;
+}
+.tf-btn:hover { border-color: var(--accent); }
+.tf-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+.tf-btn.correct { border-color: var(--correct); background: var(--correct-bg); }
+.tf-btn.wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+.tf-btn.missed { border-color: var(--missed); background: var(--missed-bg); }
+
+/* Fill blank */
+.fb-input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 1em; outline: none;
+}
+.fb-input:focus { border-color: var(--accent); }
+.fb-input.correct { border-color: var(--correct); background: var(--correct-bg); }
+.fb-input.wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+
+/* Explanation */
+.explanation {
+  margin-top: 14px; padding: 12px 16px; background: var(--accent-light);
+  border-radius: 10px; font-size: .9em; color: #555; display: none;
+}
+.explanation.show { display: block; }
+
+/* Navigation */
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 12px; }
+.nav-btn {
+  padding: 8px 20px; border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer; background: var(--card-bg); font-size: .9em; transition: .15s;
+}
+.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-btn:disabled { opacity: .35; cursor: default; }
+.nav-btn:disabled:hover { border-color: var(--border); color: var(--text); }
+
+/* Question Grid */
+.q-grid { display: flex; flex-wrap: wrap; gap: 5px; margin: 12px 0; max-height: 200px; overflow-y: auto; }
+.q-dot {
+  width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
+  font-size: .75em; font-weight: 600; display: flex; align-items: center;
+  justify-content: center; border: 1px solid var(--border); background: var(--card-bg);
+  transition: all .12s; color: var(--muted);
+}
+.q-dot:hover { border-color: var(--accent); }
+.q-dot.current { border-color: var(--accent); background: var(--accent); color: #fff; }
+.q-dot.answered { background: var(--accent-light); color: var(--accent); border-color: var(--accent-light); }
+.q-dot.correct-dot { background: var(--correct-bg); color: var(--correct); border-color: var(--correct); }
+.q-dot.wrong-dot { background: var(--wrong-bg); color: var(--wrong); border-color: var(--wrong); }
+.q-dot.missed-dot { background: var(--missed-bg); color: var(--missed); border-color: var(--missed); }
+.q-grid-toggle { font-size: .82em; color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+/* Stats bar */
+.stats-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 2px; font-size: .82em; color: var(--muted);
+}
+
+/* Submit area */
+.submit-area { text-align: center; margin: 16px 0 32px; }
+.btn {
+  padding: 10px 28px; border: none; border-radius: 8px; font-size: .95em;
+  cursor: pointer; font-weight: 600; transition: .15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #3d5ce5; }
+.btn-secondary { background: var(--border); color: var(--text); margin-left: 8px; }
+.btn-secondary:hover { background: #d1d5db; }
+.btn:disabled { opacity: .45; cursor: default; }
+
+/* Score */
+.score-panel {
+  text-align: center; padding: 20px; margin: 16px 0;
+  background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06); display: none;
+}
+.score-panel.show { display: block; }
+.score-big { font-size: 2.5em; font-weight: 700; color: var(--accent); }
+.score-label { font-size: .9em; color: var(--muted); margin-top: 4px; }
+.score-detail { display: flex; justify-content: center; gap: 24px; margin-top: 12px; font-size: .88em; }
+.score-detail .detail-item { text-align: center; }
+.score-detail .detail-val { font-size: 1.4em; font-weight: 700; }
+.score-detail .detail-val.good { color: var(--correct); }
+.score-detail .detail-val.bad { color: var(--wrong); }
+
+/* Filter chips */
+.filter-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 4px 14px; border-radius: 20px; cursor: pointer;
+  font-size: .82em; border: 1px solid var(--border); background: var(--card-bg);
+  transition: .15s; color: var(--muted);
+}
+.filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.filter-chip.wrong-count { color: var(--wrong); }
+
+@media (max-width: 600px) {
+  .container { padding: 10px; }
+  .q-card { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1 id="quiz-title">Quiz</h1>
+    <div class="meta" id="quiz-meta"></div>
+    <div class="timer-bar" id="timer-bar" style="display:none">
+      <span>⏱ 剩余时间</span>
+      <span class="time" id="timer-display">--:--</span>
+    </div>
+  </div>
+
+  <div class="tabs" id="type-tabs"></div>
+  <div class="filter-bar" id="filter-bar">
+    <span class="filter-chip active" data-filter="all">全部</span>
+    <span class="filter-chip" data-filter="unanswered">未答</span>
+    <span class="filter-chip" data-filter="wrong">错题</span>
+  </div>
+
+  <div class="q-grid-toggle" id="grid-toggle" style="margin-top:8px;display:none">展开题号导航</div>
+  <div class="q-grid" id="q-grid" style="display:none"></div>
+
+  <div class="progress-wrap"><div class="progress-fill" id="progress-bar"></div></div>
+  <div class="stats-bar">
+    <span id="filter-count"></span>
+    <span id="answered-count"></span>
+  </div>
+
+  <div class="score-panel" id="score-panel">
+    <div class="score-big" id="score-num">0/0</div>
+    <div class="score-label" id="score-text"></div>
+    <div class="score-detail">
+      <div class="detail-item"><div class="detail-val good" id="score-correct">0</div><div style="color:var(--muted)">正确</div></div>
+      <div class="detail-item"><div class="detail-val bad" id="score-wrong">0</div><div style="color:var(--muted)">错误</div></div>
+      <div class="detail-item"><div class="detail-val" style="color:var(--muted)" id="score-skip">0</div><div style="color:var(--muted)">未答</div></div>
+    </div>
+  </div>
+
+  <div id="quiz-area">
+    <div class="q-card" id="q-card">
+      <div id="q-content"></div>
+      <div class="explanation" id="q-exp"></div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prev-btn" disabled>上一题</button>
+    <span style="font-size:.85em;color:var(--muted)" id="q-pos"></span>
+    <button class="nav-btn" id="next-btn">下一题</button>
+  </div>
+
+  <div class="submit-area">
+    <button class="btn btn-primary" id="submit-btn">提交答案</button>
+    <button class="btn btn-secondary" id="reset-btn" style="display:none">重新作答</button>
+  </div>
+</div>
+
+<script>
+var quizData = {{QUIZ_DATA}};
+var EXAM_MINUTES = 60;
+
+var state = {
+  typeFilter: 'all',
+  statusFilter: 'all',
+  currentIdx: 0,
+  answers: {},
+  submitted: {},
+  submittedAll: false,
+  filteredIndices: [],
+  timerInterval: null,
+  timeLeft: EXAM_MINUTES * 60
+};
+
+var STORAGE_KEY = 'quiz_state_' + (quizData.meta && quizData.meta.source || 'default');
+
+// Normalize type names (support both English and Chinese)
+function normType(t) {
+  var m = { '判断':'true_false', '单选':'single_choice', '多选':'multi_choice', '填空':'fill_blank' };
+  return m[t] || t;
+}
+
+function init() {
+  document.getElementById('quiz-title').textContent = quizData.meta.title || 'Quiz';
+  document.getElementById('quiz-meta').textContent =
+    (quizData.meta.source ? '来源: ' + quizData.meta.source + ' | ' : '') +
+    '共 ' + quizData.meta.total_questions + ' 题';
+
+  if (EXAM_MINUTES > 0) {
+    document.getElementById('timer-bar').style.display = 'flex';
+    startTimer();
+  }
+
+  buildTypeTabs();
+  buildFilterBar();
+  loadState();
+  applyFilters();
+}
+
+function buildTypeTabs() {
+  var tabs = document.getElementById('type-tabs');
+  var types = {};
+  quizData.questions.forEach(function(q) {
+    var t = normType(q.type);
+    types[t] = (types[t] || 0) + 1;
+  });
+
+  var labels = { single_choice: '单选', multi_choice: '多选', true_false: '判断', fill_blank: '填空' };
+  var order = ['single_choice', 'multi_choice', 'true_false', 'fill_blank'];
+
+  var html = '<span class="tab active" data-type="all">全部 (' + quizData.questions.length + ')</span>';
+  order.forEach(function(t) {
+    if (types[t]) html += '<span class="tab" data-type="' + t + '">' + labels[t] + ' (' + types[t] + ')</span>';
+  });
+  tabs.innerHTML = html;
+
+  tabs.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      state.typeFilter = tab.dataset.type;
+      state.currentIdx = 0;
+      applyFilters();
+    });
+  });
+}
+
+function buildFilterBar() {
+  document.getElementById('filter-bar').querySelectorAll('.filter-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.getElementById('filter-bar').querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      state.statusFilter = chip.dataset.filter;
+      state.currentIdx = 0;
+      applyFilters();
+    });
+  });
+}
+
+function applyFilters() {
+  var filtered = [];
+  quizData.questions.forEach(function(q, i) {
+    if (state.typeFilter !== 'all' && normType(q.type) !== state.typeFilter) return;
+
+    var a = state.answers[i];
+    var s = state.submitted[i];
+    if (state.statusFilter === 'unanswered' && a !== undefined) return;
+    if (state.statusFilter === 'wrong' && s !== false) return;
+
+    filtered.push(i);
+  });
+
+  state.filteredIndices = filtered;
+  state.currentIdx = 0;
+
+  if (document.getElementById('q-grid').style.display !== 'none') buildGrid();
+  updateStats();
+  renderCurrent(false);
+}
+
+function renderCurrent(needsSave) {
+  if (state.filteredIndices.length === 0) {
+    document.getElementById('q-content').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">暂无题目</div>';
+    document.getElementById('q-exp').classList.remove('show');
+    document.getElementById('prev-btn').disabled = true;
+    document.getElementById('next-btn').disabled = true;
+    document.getElementById('q-pos').textContent = '';
+    return;
+  }
+
+  var idx = state.filteredIndices[state.currentIdx];
+  var q = quizData.questions[idx];
+  var submitted = state.submitted[idx];
+
+  var typeLabels = { single_choice: '单选题', multi_choice: '多选题', true_false: '判断题', fill_blank: '填空题',
+                     判断:'判断题', 单选:'单选题', 多选:'多选题', 填空:'填空题' };
+  var html = '<div class="q-header">';
+  html += '<span class="q-num">第 ' + q.id + ' 题</span>';
+  html += '<span class="q-badge">' + (typeLabels[q.type] || q.type) + '</span>';
+  html += '</div>';
+  html += '<div class="q-stem">' + escapeHtml(q.stem) + '</div>';
+
+  var nt = normType(q.type);
+  if (nt === 'single_choice') {
+    html += renderOptions(q, idx, 'radio', submitted);
+  } else if (nt === 'multi_choice') {
+    html += renderOptions(q, idx, 'checkbox', submitted);
+  } else if (nt === 'true_false') {
+    html += renderTF(q, idx, submitted);
+  } else if (nt === 'fill_blank') {
+    html += renderFB(q, idx, submitted);
+  }
+
+  document.getElementById('q-content').innerHTML = html;
+
+  var exp = document.getElementById('q-exp');
+  if (submitted !== undefined) {
+    exp.innerHTML = '<strong>解析：</strong>' + escapeHtml(q.explanation || '暂无解析');
+    exp.classList.add('show');
+    if (submitted === false) exp.style.background = 'var(--wrong-bg)';
+    else exp.style.background = 'var(--accent-light)';
+  } else {
+    exp.classList.remove('show');
+  }
+
+  document.getElementById('prev-btn').disabled = state.currentIdx === 0;
+  document.getElementById('next-btn').disabled = state.currentIdx >= state.filteredIndices.length - 1;
+  document.getElementById('q-pos').textContent = (state.currentIdx + 1) + ' / ' + state.filteredIndices.length;
+
+  updateProgress();
+  if (needsSave) saveState();
+}
+
+function renderOptions(q, idx, inputType, submitted) {
+  var html = '<div class="options">';
+  q.options.forEach(function(opt, oi) {
+    var value = opt.substring(0, 1);
+    var checked = '';
+    if (!submitted && state.answers[idx] !== undefined) {
+      if (inputType === 'radio') checked = state.answers[idx] === value ? ' checked' : '';
+      else checked = Array.isArray(state.answers[idx]) && state.answers[idx].includes(value) ? ' checked' : '';
+    }
+    var cls = 'option';
+    if (submitted !== undefined) {
+      if (inputType === 'radio') {
+        if (value === q.answer) cls += ' correct';
+        else if (submitted === false && state.answers[idx] === value) cls += ' wrong';
+        else if (submitted === false && value !== q.answer && state.answers[idx] !== value) {
+          // missed: user chose wrong option, correct one needs to show
+        }
+      } else {
+        var inAnswer = Array.isArray(q.answer) ? q.answer.includes(value) : q.answer === value;
+        var inSelected = Array.isArray(state.answers[idx]) ? state.answers[idx].includes(value) : state.answers[idx] === value;
+        if (inAnswer) cls += ' correct';
+        if (inSelected && !inAnswer) cls += ' wrong';
+        if (!inSelected && inAnswer) cls += ' missed';
+      }
+    }
+    html += '<label class="' + cls + '" id="opt-' + idx + '-' + oi + '">';
+    html += '<input type="' + inputType + '" name="q-' + idx + '" value="' + value + '"' + checked;
+    if (submitted !== undefined) html += ' disabled';
+    html += ' onchange="saveAnswer(' + idx + ', \'' + inputType + '\')">';
+    html += '<span>' + escapeHtml(opt) + '</span>';
+    html += '</label>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderTF(q, idx, submitted) {
+  var tfVal = state.answers[idx];
+  var html = '<div class="tf-row">';
+  ['正确', '错误'].forEach(function(label, i) {
+    var val = i === 0;
+    var cls = 'tf-btn';
+    if (tfVal === val) cls += ' selected';
+    if (submitted !== undefined) {
+      if (val === q.answer) cls += ' correct';
+      if (tfVal === val && submitted === false) cls += ' wrong';
+      if (tfVal !== val && val === q.answer && submitted === false) cls += ' missed';
+    }
+    html += '<button class="' + cls + '" id="opt-' + idx + '-' + i + '"';
+    if (submitted !== undefined) html += ' disabled';
+    html += ' onclick="selectTF(' + idx + ', ' + val + ', this)">' + label + '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderFB(q, idx, submitted) {
+  var val = state.answers[idx] || '';
+  var cls = 'fb-input';
+  if (submitted === true) cls += ' correct';
+  if (submitted === false) cls += ' wrong';
+  var html = '<input type="text" class="' + cls + '" id="fb-' + idx + '" value="' + escapeAttr(val) + '"';
+  html += ' placeholder="请输入答案" oninput="saveFB(' + idx + ', this.value)"';
+  if (submitted !== undefined) html += ' disabled';
+  html += '>';
+  if (submitted === false) {
+    html += '<div style="margin-top:6px;font-size:.85em;color:var(--wrong)">正确答案: ' +
+      escapeHtml(Array.isArray(q.answer) ? q.answer.join(' / ') : q.answer) + '</div>';
+  }
+  return html;
+}
+
+function selectTF(idx, val, btn) {
+  var prev = document.querySelector('#opt-' + idx + '-0.selected, #opt-' + idx + '-1.selected');
+  if (prev) prev.classList.remove('selected');
+  btn.classList.add('selected');
+  state.answers[idx] = val;
+  saveState();
+  updateStats();
+}
+
+function saveAnswer(idx, type) {
+  if (type === 'radio') {
+    var sel = document.querySelector('input[name="q-' + idx + '"]:checked');
+    state.answers[idx] = sel ? sel.value : undefined;
+  } else {
+    var vals = [];
+    document.querySelectorAll('input[name="q-' + idx + '"]:checked').forEach(function(cb) { vals.push(cb.value); });
+    state.answers[idx] = vals.length > 0 ? vals : undefined;
+  }
+  delete state.submitted[idx];
+  delete state.submittedAll;
+  saveState();
+  updateStats();
+}
+
+function saveFB(idx, val) {
+  state.answers[idx] = val.trim() || undefined;
+  delete state.submitted[idx];
+  delete state.submittedAll;
+  saveState();
+  updateStats();
+}
+
+function updateStats() {
+  var answered = 0;
+  quizData.questions.forEach(function(_, i) { if (state.answers[i] !== undefined) answered++; });
+  document.getElementById('answered-count').textContent = '已答 ' + answered + ' / ' + quizData.questions.length;
+
+  var wrong = 0, submitted = 0;
+  quizData.questions.forEach(function(_, i) { if (state.submitted[i] === false) wrong++; if (state.submitted[i] !== undefined) submitted++; });
+
+  var wrongChip = document.querySelector('.filter-chip.wrong-count');
+  if (wrongChip) wrongChip.textContent = '错题 (' + wrong + ')';
+
+  var filterLabel = state.statusFilter === 'all' ? '全部 (' + state.filteredIndices.length + ')' :
+    state.statusFilter === 'unanswered' ? '未答' : '错题';
+  document.getElementById('filter-count').textContent = '当前: ' + filterLabel;
+}
+
+function updateProgress() {
+  var done = 0;
+  quizData.questions.forEach(function(_, i) { if (state.submitted[i] !== undefined) done++; });
+  var pct = quizData.questions.length > 0 ? (done / quizData.questions.length * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function buildGrid() {
+  var grid = document.getElementById('q-grid');
+  var html = '';
+  quizData.questions.forEach(function(q, i) {
+    var cls = 'q-dot';
+    if (state.filteredIndices.includes(i) && i === state.filteredIndices[state.currentIdx]) cls += ' current';
+    if (state.submitted[i] === true) cls += ' correct-dot';
+    else if (state.submitted[i] === false) cls += ' wrong-dot';
+    else if (state.answers[i] !== undefined) cls += ' answered';
+    html += '<div class="' + cls + '" onclick="jumpTo(' + i + ')">' + (i + 1) + '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+function jumpTo(globalIdx) {
+  var filtered = state.filteredIndices;
+  var pos = filtered.indexOf(globalIdx);
+  if (pos >= 0) {
+    state.currentIdx = pos;
+  } else {
+    state.typeFilter = 'all';
+    state.statusFilter = 'all';
+    applyFilters();
+    state.currentIdx = Math.max(0, state.filteredIndices.indexOf(globalIdx));
+  }
+  renderCurrent(true);
+  buildGrid();
+}
+
+// Grid toggle
+document.getElementById('grid-toggle').addEventListener('click', function() {
+  var grid = document.getElementById('q-grid');
+  var isVisible = grid.style.display !== 'none';
+  grid.style.display = isVisible ? 'none' : 'flex';
+  this.textContent = isVisible ? '展开题号导航' : '收起题号导航';
+  if (!isVisible) buildGrid();
+});
+
+// Navigation
+document.getElementById('prev-btn').addEventListener('click', function() {
+  if (state.currentIdx > 0) { state.currentIdx--; renderCurrent(true); }
+});
+document.getElementById('next-btn').addEventListener('click', function() {
+  if (state.currentIdx < state.filteredIndices.length - 1) { state.currentIdx++; renderCurrent(true); }
+});
+
+// Keyboard nav
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowLeft' && state.currentIdx > 0) { state.currentIdx--; renderCurrent(true); }
+  if (e.key === 'ArrowRight' && state.currentIdx < state.filteredIndices.length - 1) { state.currentIdx++; renderCurrent(true); }
+});
+
+// Timer
+function startTimer() {
+  state.timerInterval = setInterval(function() {
+    if (state.submittedAll) { clearInterval(state.timerInterval); return; }
+    state.timeLeft--;
+    updateTimerDisplay();
+    if (state.timeLeft <= 0) { clearInterval(state.timerInterval); submitQuiz(); }
+  }, 1000);
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  var m = Math.floor(state.timeLeft / 60);
+  var s = state.timeLeft % 60;
+  var text = m + ':' + String(s).padStart(2, '0');
+  var el = document.getElementById('timer-display');
+  el.textContent = text;
+  el.className = 'time';
+  if (state.timeLeft < 600) el.classList.add('warning');
+  if (state.timeLeft < 300) el.classList.add('danger');
+}
+
+// Submit
+document.getElementById('submit-btn').addEventListener('click', submitQuiz);
+function submitQuiz() {
+  if (state.submittedAll) return;
+
+  var correct = 0, wrong = 0, skipped = 0;
+  quizData.questions.forEach(function(q, i) {
+    if (state.submitted[i] !== undefined) return;
+    var userAnswer = state.answers[i];
+    if (userAnswer === undefined) {
+      state.submitted[i] = false;
+      skipped++;
+      return;
+    }
+    var isCorrect = checkAnswer(q, userAnswer);
+    state.submitted[i] = isCorrect;
+    if (isCorrect) correct++; else wrong++;
+  });
+
+  state.submittedAll = true;
+  if (state.timerInterval) clearInterval(state.timerInterval);
+
+  // Show score
+  var panel = document.getElementById('score-panel');
+  panel.classList.add('show');
+  var total = correct + wrong + skipped;
+  document.getElementById('score-num').textContent = correct + ' / ' + total;
+  document.getElementById('score-correct').textContent = correct;
+  document.getElementById('score-wrong').textContent = wrong;
+  document.getElementById('score-skip').textContent = skipped;
+  var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+  document.getElementById('score-text').textContent =
+    '正确率 ' + pct + '% · ' + (pct >= 80 ? '优秀' : pct >= 60 ? '良好' : pct >= 40 ? '还需努力' : '继续加油');
+
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('reset-btn').style.display = 'inline-block';
+  document.getElementById('type-tabs').querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('type-tabs').querySelector('.tab[data-type="all"]').classList.add('active');
+  state.typeFilter = 'all';
+  state.statusFilter = 'all';
+  applyFilters();
+  buildGrid();
+  saveState();
+}
+
+function checkAnswer(q, userAnswer) {
+  var nt = normType(q.type);
+  if (nt === 'true_false') return userAnswer === q.answer;
+  if (nt === 'fill_blank') {
+    var accepted = Array.isArray(q.answer) ? q.answer : [q.answer];
+    return accepted.some(function(a) { return String(userAnswer).trim().toLowerCase() === String(a).toLowerCase(); });
+  }
+  if (nt === 'multi_choice') {
+    if (!Array.isArray(userAnswer)) return false;
+    if (userAnswer.length === 0) return false;
+    var sa = userAnswer.slice().sort().join(',');
+    var ea = (Array.isArray(q.answer) ? q.answer : [q.answer]).slice().sort().join(',');
+    return sa === ea;
+  }
+  return userAnswer === q.answer;
+}
+
+// Reset
+document.getElementById('reset-btn').addEventListener('click', function() {
+  state.answers = {};
+  state.submitted = {};
+  state.submittedAll = false;
+  state.timeLeft = EXAM_MINUTES * 60;
+  state.typeFilter = 'all';
+  state.statusFilter = 'all';
+  state.currentIdx = 0;
+
+  document.getElementById('score-panel').classList.remove('show');
+  document.getElementById('submit-btn').style.display = 'inline-block';
+  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('type-tabs').querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('type-tabs').querySelector('.tab[data-type="all"]').classList.add('active');
+  applyFilters();
+  if (document.getElementById('q-grid').style.display !== 'none') buildGrid();
+  if (EXAM_MINUTES > 0) startTimer();
+  saveState();
+});
+
+// State persistence
+function saveState() {
+  var s = {
+    answers: state.answers,
+    submitted: state.submitted,
+    submittedAll: state.submittedAll,
+    typeFilter: state.typeFilter,
+    statusFilter: state.statusFilter,
+    currentIdx: state.currentIdx,
+    timeLeft: state.timeLeft
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      state.answers = s.answers || {};
+      state.submitted = s.submitted || {};
+      state.submittedAll = s.submittedAll || false;
+      state.typeFilter = s.typeFilter || 'all';
+      state.statusFilter = s.statusFilter || 'all';
+      state.currentIdx = s.currentIdx || 0;
+      state.timeLeft = s.timeLeft !== undefined ? s.timeLeft : EXAM_MINUTES * 60;
+      if (state.submittedAll) {
+        state.timeLeft = 0;
+        showSubmittedState();
+      }
+    }
+  } catch(e) {}
+}
+
+function showSubmittedState() {
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('reset-btn').style.display = 'inline-block';
+  var correct = 0, wrong = 0, skipped = 0;
+  quizData.questions.forEach(function(_, i) {
+    if (state.submitted[i] === true) correct++;
+    else if (state.submitted[i] === false && state.answers[i] !== undefined) wrong++;
+    else skipped++;
+  });
+  var total = correct + wrong + skipped;
+  var panel = document.getElementById('score-panel');
+  panel.classList.add('show');
+  document.getElementById('score-num').textContent = correct + ' / ' + total;
+  document.getElementById('score-correct').textContent = correct;
+  document.getElementById('score-wrong').textContent = wrong;
+  document.getElementById('score-skip').textContent = skipped;
+  var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+  document.getElementById('score-text').textContent =
+    '正确率 ' + pct + '% · ' + (pct >= 80 ? '优秀' : pct >= 60 ? '良好' : pct >= 40 ? '还需努力' : '继续加油');
+}
+
+var escapeDiv = document.createElement('div');
+function escapeHtml(text) { escapeDiv.textContent = text || ''; return escapeDiv.innerHTML; }
+function escapeAttr(text) { return String(text || '').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法考真题刷题</title>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #fff;
+  --text: #1a1a2e;
+  --muted: #8892b0;
+  --accent: #4f6ef7;
+  --accent-light: #eef1ff;
+  --border: #e5e7eb;
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
+header {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+header h1 { font-size: 1.6em; font-weight: 700; }
+header p { color: var(--muted); margin-top: 8px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.quiz-card {
+  display: block;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: transform .15s, box-shadow .15s;
+}
+.quiz-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+.quiz-card h3 { font-size: 1.1em; margin-bottom: 8px; }
+.quiz-card .meta {
+  font-size: .85em;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.quiz-card .btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 20px;
+  font-size: .85em;
+  font-weight: 500;
+}
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: .8em;
+  margin-top: 32px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>法考真题刷题</h1>
+    <p>选择一套试卷，开始练习</p>
+  </header>
+  <div class="grid">
+    
+            <a href="quiz/民法真金题1-100.html" class="quiz-card">
+                <h3>2026年法考民法真金题（精简版·第1-100页）单选50题</h3>
+                <p class="meta">共 50 题 · 2026年法考民法李劲松真金题（精简版）_Password_Removed_1-100_可搜索.pdf</p>
+                <span class="btn">开始刷题</span>
+            </a>
+            
+
+            <a href="quiz/民法真金题1-100-多选.html" class="quiz-card">
+                <h3>2026年法考民法真金题（精简版·第1-100页）多选41题</h3>
+                <p class="meta">共 41 题 · 2026年法考民法李劲松真金题（精简版）_Password_Removed_1-100_可搜索.pdf</p>
+                <span class="btn">开始刷题</span>
+            </a>
+            
+
+            <a href="quiz/民法真金题101-200-多选.html" class="quiz-card">
+                <h3>2026年法考民法真金题（精简版·第101-200页）多选29题</h3>
+                <p class="meta">共 29 题 · 2026年法考民法李劲松真金题（精简版）_Password_Removed_101-200_可搜索.pdf</p>
+                <span class="btn">开始刷题</span>
+            </a>
+            
+  </div>
+  <footer>
+    <p>数据源自飞书多维表格 · 自动构建于 GitHub Pages</p>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+name: Build and Deploy Quiz Site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # 每天 UTC 02:00 运行一次（北京时间 10:00）
+    - cron: '0 2 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build quiz pages
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_APP_TOKEN: ${{ secrets.FEISHU_APP_TOKEN }}
+          FEISHU_QUIZ_TABLE: ${{ secrets.FEISHU_QUIZ_TABLE }}
+          FEISHU_QUEST_TABLE: ${{ secrets.FEISHU_QUEST_TABLE }}
+        run: python build.py
+
+      - name: Commit and push generated site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto build quiz site $(date -u +%Y-%m-%d_%H:%M:%S)"
+            git push
+          fi
