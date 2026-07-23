@@ -50,41 +50,51 @@ def render_quiz_page(template: str, quiz_data: dict, slug: str) -> str:
 
 
 def build_index_page(quizzes: list) -> str:
-    """Render the site index page."""
-    cards = []
+    """Render the site index page with a clean list style."""
+
+    def guess_tag(title: str) -> tuple:
+        t = title.lower()
+        if "多选" in t:
+            return "多选", "multi"
+        if "单选" in t:
+            return "单选", "single"
+        if "判断" in t:
+            return "判断", "judge"
+        return "练习", "single"
+
+    rows = []
     for quiz in quizzes:
         meta = quiz["data"].get("meta", {})
         title = meta.get("title", quiz["slug"])
-        total = meta.get("total_questions", len(quiz["data"].get("questions", [])))
-        source = meta.get("source", "")
-        cards.append(
+        tag, tag_class = guess_tag(title)
+        rows.append(
             f"""
-            <a href="quiz/{quiz['slug']}.html" class="quiz-card">
-                <h3>{html_module.escape(title)}</h3>
-                <p class="meta">共 {total} 题 · {html_module.escape(source)}</p>
-                <span class="btn">开始刷题</span>
+            <a href="quiz/{quiz['slug']}.html" class="quiz-row">
+                <span class="icon">📄</span>
+                <span class="title">{html_module.escape(title)}</span>
+                <span class="tag tag-{tag_class}">{tag}</span>
             </a>
             """
         )
 
-    cards_html = "\n".join(cards) if cards else "<p>暂无试卷</p>"
+    rows_html = "\n".join(rows) if rows else "<p>暂无试卷</p>"
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法考真题刷题</title>
+<title>民法刷题</title>
 <style>
 :root {{
   --bg: #f0f2f5;
   --card-bg: #fff;
   --text: #1a1a2e;
   --muted: #8892b0;
-  --accent: #4f6ef7;
-  --accent-light: #eef1ff;
-  --border: #e5e7eb;
-  --radius: 12px;
+  --single: #4f6ef7;
+  --multi: #f59e0b;
+  --judge: #10b981;
+  --radius: 16px;
 }}
 * {{ margin:0; padding:0; box-sizing:border-box; }}
 body {{
@@ -94,70 +104,64 @@ body {{
   line-height: 1.6;
   min-height: 100vh;
 }}
-.container {{ max-width: 860px; margin: 0 auto; padding: 24px 16px; }}
-header {{
+.container {{ max-width: 720px; margin: 0 auto; padding: 40px 16px; }}
+.card {{
   background: var(--card-bg);
   border-radius: var(--radius);
-  padding: 32px 24px;
-  margin-bottom: 20px;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  padding: 40px 32px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.05);
 }}
-header h1 {{ font-size: 1.6em; font-weight: 700; }}
-header p {{ color: var(--muted); margin-top: 8px; }}
-.grid {{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-}}
-.quiz-card {{
-  display: block;
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: 24px;
+header {{ text-align: center; margin-bottom: 36px; }}
+header h1 {{ font-size: 1.8em; font-weight: 700; display: inline-flex; align-items: center; gap: 10px; }}
+header h1 .logo {{ font-size: 1.2em; }}
+header p {{ color: var(--muted); margin-top: 8px; font-size: .95em; }}
+.divider {{ height: 1px; background: #eef1ff; margin: 24px 0; }}
+.quiz-row {{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
   text-decoration: none;
   color: inherit;
-  box-shadow: 0 1px 3px rgba(0,0,0,.06);
-  transition: transform .15s, box-shadow .15s;
+  transition: background .15s;
 }}
-.quiz-card:hover {{
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-}}
-.quiz-card h3 {{ font-size: 1.1em; margin-bottom: 8px; }}
-.quiz-card .meta {{
-  font-size: .85em;
-  color: var(--muted);
-  margin-bottom: 16px;
-}}
-.quiz-card .btn {{
-  display: inline-block;
-  padding: 8px 16px;
-  background: var(--accent);
+.quiz-row:hover {{ background: #f8faff; }}
+.quiz-row .icon {{ font-size: 1.3em; }}
+.quiz-row .title {{ flex: 1; font-weight: 500; font-size: 1.05em; }}
+.quiz-row .tag {{
+  font-size: .75em;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
   color: #fff;
-  border-radius: 20px;
-  font-size: .85em;
-  font-weight: 500;
 }}
+.tag-single {{ background: var(--single); }}
+.tag-multi {{ background: var(--multi); }}
+.tag-judge {{ background: var(--judge); }}
 footer {{
   text-align: center;
   color: var(--muted);
-  font-size: .8em;
+  font-size: .85em;
   margin-top: 32px;
 }}
+footer .bulb {{ margin-right: 4px; }}
 </style>
 </head>
 <body>
 <div class="container">
-  <header>
-    <h1>法考真题刷题</h1>
-    <p>选择一套试卷，开始练习</p>
-  </header>
-  <div class="grid">
-    {cards_html}
+  <div class="card">
+    <header>
+      <h1><span class="logo">📚</span>民法刷题</h1>
+      <p>选择以下题目开始练习</p>
+    </header>
+    <div class="divider"></div>
+    <div class="quiz-list">
+      {rows_html}
+    </div>
   </div>
   <footer>
-    <p>数据源自飞书多维表格 · 自动构建于 GitHub Pages</p>
+    <p><span class="bulb">💡</span>点击题目开始刷题 · 数据来自飞书多维表格</p>
   </footer>
 </div>
 </body>
