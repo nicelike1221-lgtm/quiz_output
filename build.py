@@ -233,6 +233,15 @@ def list_all_records(token: str, app_token: str, table_id: str) -> list:
     return records
 
 
+def field_to_str(value) -> str:
+    """Convert a Feishu field value to string, handling list types."""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return "".join(str(x).strip() for x in value if str(x).strip())
+    return str(value).strip()
+
+
 def parse_options_from_field(raw):
     """Accept options as a list, newline-separated, pipe-separated,
     or a single line with A/B/C/D prefixes."""
@@ -270,15 +279,15 @@ def parse_quiz_meta(records: list) -> list:
             enabled = enabled.lower() in ("true", "是", "yes", "1")
         if not enabled:
             continue
-        quiz_id = str(fields.get("quiz_id", "")).strip()
-        title = str(fields.get("title", "")).strip()
+        quiz_id = field_to_str(fields.get("quiz_id", ""))
+        title = field_to_str(fields.get("title", ""))
         if not quiz_id or not title:
             continue
         quizzes.append({
             "quiz_id": quiz_id,
             "title": title,
-            "source": str(fields.get("source", "")).strip(),
-            "slug": slugify(str(fields.get("slug", "")).strip() or quiz_id),
+            "source": field_to_str(fields.get("source", "")),
+            "slug": slugify(field_to_str(fields.get("slug", "")) or quiz_id),
         })
     return quizzes
 
@@ -287,8 +296,8 @@ def parse_questions(records: list) -> list:
     questions = []
     for r in records:
         fields = r.get("fields", {})
-        quiz_id = str(fields.get("quiz_id", "")).strip()
-        stem = str(fields.get("stem", "")).strip()
+        quiz_id = field_to_str(fields.get("quiz_id", ""))
+        stem = field_to_str(fields.get("stem", ""))
         if not quiz_id or not stem:
             continue
         qid = fields.get("id")
@@ -302,18 +311,18 @@ def parse_questions(records: list) -> list:
         for i in range(8):
             key = f"option_{chr(ord('A') + i)}"
             if key in fields and fields[key]:
-                options.append(str(fields[key]).strip())
+                options.append(field_to_str(fields[key]))
         if not options:
             options = parse_options_from_field(fields.get("options"))
 
         questions.append({
             "quiz_id": quiz_id,
             "id": qid,
-            "type": str(fields.get("type", "single_choice")).strip(),
+            "type": field_to_str(fields.get("type", "single_choice")),
             "stem": stem,
             "options": options,
-            "answer": str(fields.get("answer", "")).strip(),
-            "explanation": str(fields.get("explanation", "")).strip(),
+            "answer": field_to_str(fields.get("answer", "")),
+            "explanation": field_to_str(fields.get("explanation", "")),
         })
     # Stable ordering by id
     questions.sort(key=lambda q: q["id"])
