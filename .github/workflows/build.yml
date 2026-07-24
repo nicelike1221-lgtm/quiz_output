@@ -44,5 +44,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Auto build quiz site $(date -u +%Y-%m-%d_%H:%M:%S)"
-            git push
+            git push --force
           fi
